@@ -2,6 +2,7 @@
 const mongoose=require('mongoose')
 mongoose.set('strictQuery', false);
 // define connection string  using  mongoose--bank-db name
+
 mongoose.connect('mongodb://localhost:27017/bank',()=>{
     console.log('connected to mongodb successfully');
 })
@@ -11,11 +12,10 @@ mongoose.connect('mongodb://localhost:27017/bank',()=>{
 
 const User = mongoose.model('User',{
     username:String,
-    acno:Number,
+    phno:Number,
     password:String,
-    balance:Number,
-    transaction:[]
-
+    name:String,
+    email:String
 })
 
 // export the model

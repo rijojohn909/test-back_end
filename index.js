@@ -27,22 +27,7 @@ server.listen(3000, () => {
 })
 
 
-// get http
-server.get('/', (req, res) => {
-    res.send('Get Method')
-})
 
-server.post('/', (req, res) => {
-    res.send('Post Method')
-})
-
-server.put('/', (req, res) => {
-    res.send('Put Method')
-})
-
-server.delete('/', (req, res) => {
-    res.send('Delete Method')
-})
 
 // application specific middleware
 const appMiddleware = (req,res,next)=>{
@@ -51,7 +36,6 @@ const appMiddleware = (req,res,next)=>{
  }
 server.use(appMiddleware)
 
-// bank app front end request resolving
 
 // token verify middleware
 const jwtMiddleware = (req,res,next)=>{
@@ -62,7 +46,7 @@ const jwtMiddleware = (req,res,next)=>{
         // verify the token
     const data = jwt.verify(token,'supersecretkey123')
     console.log('data');
-    req.fromAcno = data.currentAcno
+    req.fromPhno = data.currentPhno
     console.log('valid Token');
     next()
     }
@@ -79,7 +63,7 @@ server.post('/register', (req, res) => {
     console.log('Inside register function');
     console.log(req.body);
     // asynchronous
-    dataService.register(req.body.uname, req.body.acno, req.body.pswd)
+    dataService.register(req.body.uname, req.body.phno, req.body.pswd, req.body.ename, req.body.email)
         .then((result) => {
             res.status(result.statusCode).json(result)
         })
@@ -90,61 +74,43 @@ server.post('/login', (req, res) => {
     console.log('Inside login function');
     console.log(req.body);
     // asynchronous
-    dataService.login(req.body.acno, req.body.pswd)
+    dataService.login(req.body.phno, req.body.pswd)
         .then((result) => {
             res.status(result.statusCode).json(result)
         })
 })
 
-// getBalance
-server.get('/getBalance/:acno',jwtMiddleware, (req, res) => {
+// getdetails
+server.get('/getDetails/:phno',jwtMiddleware, (req, res) => {
     console.log('Inside get Balance api');
-    console.log(req.params.acno);
+    console.log(req.params.phno);
     // asynchronous
-    dataService.getBalance(req.params.acno)
+    dataService.getDetails(req.params.phno)
         .then((result) => {
             res.status(result.statusCode).json(result)
         })
 })
 
-// deposite api
-server.post('/deposite',jwtMiddleware, (req, res) => {
-    console.log('Inside deposite api');
+// register api call
+server.post('/editDetails', (req, res) => {
+    console.log('Inside register function');
     console.log(req.body);
     // asynchronous
-    dataService.deposite(req.body.acno,req.body.amount)
+    dataService.editDetails(req.body.uname, req.body.phno, req.body.ename, req.body.email)
         .then((result) => {
             res.status(result.statusCode).json(result)
         })
 })
 
-// fundTransfer api
-server.post('/fundTransfer',jwtMiddleware, (req, res) => {
-    console.log('Inside fundTransfer api');
-    console.log(req.body);
-    // asynchronous
-    dataService.fundTransfer(req,req.body.toAcno,req.body.pswd,req.body.amount)
-        .then((result) => {
-            res.status(result.statusCode).json(result)
-        })
-})
-
-// getAllTransactions
-server.get('/all-transactions',jwtMiddleware,(req,res)=>{
-    console.log('Inside getAllTransactions Api');
-    dataService.getAllTransactions(req)
-    .then((result)=>{
-        res.status(result.statusCode).json(result)
-    })
-})
 
 // delete account
-server.delete('/delete-account/:acno',jwtMiddleware, (req, res) => {
+server.delete('/delete-account/:phno',jwtMiddleware, (req, res) => {
     console.log('Inside delete account api');
-    console.log(req.params.acno);
+    console.log(req.params.phno);
     // asynchronous
-    dataService.deleteMyAccount(req.params.acno)
+    dataService.deleteMyAccount(req.params.phno)
         .then((result) => {
             res.status(result.statusCode).json(result)
         })
 })
+

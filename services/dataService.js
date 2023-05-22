@@ -5,27 +5,27 @@ const db = require('./db')
 const jwt = require('jsonwebtoken')
 
 // register
-const register = (uname, acno, pswd) => {
-    // check acno is in mongodb - db.users.findOne()
+const register = (uname, phno, pswd, ename, email) => {
+    // check phno is in mongodb - db.users.findOne()
     return db.User.findOne({
-        acno
+        phno
     }).then((result) => {
         console.log(result);
         if (result) {
-            // if acno exists
+            // if phno exists
             return {
                 statusCode: 401,
-                message: 'Account already exist'
+                message: 'User already exist'
             }
         }
         else {
             // to add new user
             const newUser = new db.User({
                 username: uname,
-                acno: acno,
+                phno: phno,
                 password: pswd,
-                balance: 0,
-                transaction: []
+                name: ename,
+                email: email
             })
             newUser.save()
             return {
@@ -36,45 +36,71 @@ const register = (uname, acno, pswd) => {
     })
 }
 // login
-const login = (acno, pswd) => {
+const login = (phno,pswd) => {
     console.log('inside login function');
-    // check acno ,pswd is in mongodb - db.users.findOne()
+    // check phno ,pswd is in mongodb - db.users.findOne()
     return db.User.findOne({
-        acno,
+        phno,
         password: pswd
     }).then((result) => {
         if (result) {
 
             // generate token
             const token = jwt.sign({
-                currentAcno:acno
+                currentPhno:phno
             },'supersecretkey123')
             return {
                 statusCode: 200,
                 message: 'login successful',
                 username: result.username,
-                currentAcno: acno,
+                currentPhno: phno,
                 token
             }
         }
         else {
             return {
                 statusCode: 404,
-                message: 'Invalid Acc/password'
+                message: 'Invalid phno'
             }
         }
     })
 
 }
-// getBalance
-const getBalance = (acno) => {
+
+// editDetails
+const editDetails = (uname, phno, ename, email) => {
+    // check phno is in mongodb - db.users.findOne()
     return db.User.findOne({
-        acno
+        phno
+    }).then((result) => {
+        console.log(result);
+        if (result) {
+            
+            // to add new user
+            const newUser = new db.User({
+                username: uname,
+                phno: phno,
+                name: ename,
+                email: email
+            })
+            newUser.save()
+            return {
+                statusCode: 200,
+                message: 'Updation successful'
+            }
+        }
+    })
+}
+
+// getdata
+const getDetails = (phno) => {
+    return db.User.findOne({
+        phno
     }).then((result) => {
         if (result) {
             return {
                 statusCode: 200,
-                balance: result.balance
+                users: result
             }
         }
         else{
@@ -87,139 +113,15 @@ const getBalance = (acno) => {
     )
 }
 
-// deposite
-const deposite =(acno,amt)=>{
-    let amount = Number(amt)
-    return db.User.findOne({
-        acno
-    }).then((result)=>{
-        if(result){
-            // acno is present in db
-            result.balance += amount
-            result.transaction.push({
-                type:"CREDIT",
-                fromAcno:acno,
-                toAcno:acno,
-                amount
-            })
-            // to save update in mongodb
-            result.save()
-            return{
-                statusCode: 200,
-                message: `${amount} successfully deposited` 
-            }
-        }
-        else{
-            return{
-                statusCode: 404,
-                message: 'Invalid Account'
-            }
-        }
-    })
-}
 
-// fundTransfer
 
-const fundTransfer = (req,toAcno,pswd,amt)=>{
-    let amount = Number(amt)
-    let fromAcno = req.fromAcno
-    return db.User.findOne({
-        acno:fromAcno,
-        password:pswd
-    }).then(result=>{
-        // console.log(result);
-        if(fromAcno==toAcno){
-            return{
-                            statusCode:401,
-                            message:"Permission denied due to own Account Number transfer!"
-                        }
-        }
-        if(result){
-        
-            // debit account details
-            let fromAcnoBalance=result.balance
-            if(fromAcnoBalance>=amount){
-                result.balance = fromAcnoBalance-amount
-                
-                // credit account details
-                return db.User.findOne({
-                    acno:toAcno
-                }).then(creditdata=>{
-                    if(creditdata){
-                        creditdata.balance+=amount
-                        creditdata.transaction.push({
-                            type:"CREDIT",
-                            fromAcno,
-                            toAcno,
-                            amount
-                        })
-                        creditdata.save();
-                        console.log(creditdata);
-                        result.transaction.push({
-                            type:"DEBIT",
-                            fromAcno,
-                            toAcno,
-                            amount
-                        })
-                        result.save();
-                        console.log(result);
-                        return{
-                            statusCode:200,
-                            message:"Amount Transfered Successfully"
-                        }
-                    }
-                    else{
-                        return{
-                            statusCode: 401,
-                            message: "Invalid Credit Account Number"
-                        }
-                    }
-                })
 
-            }
-            else{
-                return{
-                    statusCode: 403,
-                    message: "Insufficient Balance"
-                }
-            }
-        }
-        else{
-            return{
-                statusCode: 401,
-                message: "Invalid Debit Account Number or Password"
-            }
-            
-        }
-    })
 
-}
-
-// getAllTransactions
-const getAllTransactions = (req)=>{
- let acno = req.fromAcno
- return db.User.findOne({
-    acno
-}).then((result)=>{
-        if(result){
-           return {
-            statusCode:200,
-            transaction:result.transaction
-            }
-        }
-        else{
-            return{
-                statusCode: 401,
-                message: "Invalid Account Number"
-            }
-        }
-    })
-}
 
 // delete account
-const deleteMyAccount = (acno)=>{
+const deleteMyAccount = (phno)=>{
 return db.User.deleteOne({
-    acno
+    phno
 }).then((result)=>{
     if(result){
         return{
@@ -230,7 +132,7 @@ return db.User.deleteOne({
     else{
         return{
             statusCode: 401,
-            message: "Invalid Account Number"
+            message: "Invalid Phone Number"
         }
     }
 })
@@ -240,9 +142,7 @@ return db.User.deleteOne({
 module.exports = {
     register,
     login,
-    getBalance,
-    deposite,
-    fundTransfer,
-    getAllTransactions,
+    getDetails,
+    editDetails,
     deleteMyAccount  
 }
